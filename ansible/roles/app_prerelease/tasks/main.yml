@@ -1,0 +1,35 @@
+---
+- name: Start green service
+  shell: "docker-compose up --force-recreate --build -d green"
+  args:
+    chdir: /var/www/html/
+
+- name: Put site to maintenance mode
+  shell: docker-compose exec blue /bin/bash -c '/var/www/vendor/bin/drush sset system.maintenance_mode TRUE'
+
+- name: Clear cache
+  shell: docker-compose exec blue /bin/bash -c '/var/www/vendor/bin/drush cache-rebuild'
+
+- name: Dump database
+  shell: docker exec postgres /bin/bash -c 'PGPASSWORD=docker pg_dump -U docker drupal' > /var/www/html/rollback-{{ stable }}.sql
+
+- name: Switch upstream from blue to greean
+  shell: docker rename upstream tmp && docker rename slave upstream && docker rename tmp slave
+
+- name: Try to upgrade
+  block:
+    - name: Update database
+      shell: docker-compose exec green /bin/bash -c '/var/www/vendor/bin/drush updatedb'
+
+    - name: Bring server up (latest)
+      shell: docker-compose exec green /bin/bash -c '/var/www/vendor/bin/drush sset system.maintenance_mode FALSE'
+
+    - name: Stop slave server
+      shell: docker-compose stop blue
+
+  rescue:
+    - name: PANIC!!! Switch upstream from greean to blue
+      shell: docker rename upstream tmp && docker rename slave upstream && docker rename tmp slave
+
+    - name: Bring server up (stable)
+      shell: docker-compose exec blue /bin/bash -c '/var/www/vendor/bin/drush sset system.maintenance_mode FALSE'

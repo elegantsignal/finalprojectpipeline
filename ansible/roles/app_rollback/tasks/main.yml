@@ -1,0 +1,16 @@
+---
+- name: Stop all app containers and clear
+  shell: "docker-compose kill -s SIGKILL blue green && docker container prune -f"
+  args:
+    chdir: /var/www/html/
+
+- name: Restore database
+  shell: "cat rollback-{{ stable }}.sql | docker exec postgres /bin/bash -c 'PGPASSWORD=docker psql -U docker drupal'"
+
+- name: Start blue server
+  shell: "docker-compose up --force-recreate --build -d blue"
+  args:
+    chdir: /var/www/html/
+
+- name: Bring site up
+  shell: docker-compose exec blue /bin/bash -c '/var/www/vendor/bin/drush sset system.maintenance_mode FALSE'

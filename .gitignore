@@ -1,0 +1,6 @@
+deployment/roles/deploy/files/app
+m-sa2-10-19-app
+src
+tmp
+docker/files
+pass

@@ -1,0 +1,6 @@
+---
+- hosts: production
+  roles:
+    - install_basic
+    - install_docker
+    - app_setup

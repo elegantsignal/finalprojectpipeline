@@ -1,0 +1,41 @@
+---
+- name: Create /var/www/html
+  file:
+    path: /var/www/html
+    state: directory
+
+- name: Create /var/www/html/file
+  file:
+    path: /var/www/html/files
+    owner: www-data
+    group: www-data
+    state: directory
+
+- name: Create settings.php
+  file:
+    path: /var/www/html/settings.php
+    state: touch
+    owner: www-data
+    group: www-data
+
+- name: Create docker-compose
+  template:
+    src: templates/docker-compose.yml.j2
+    dest: /var/www/html/docker-compose.yml
+    owner: www-data
+    group: www-data
+
+- name: Copy nginx.conf
+  copy:
+    src: files/nginx.conf
+    dest: /var/www/html/nginx.conf
+
+- name: Stop all containers
+  shell: "docker-compose down"
+  args:
+    chdir: /var/www/html/
+
+- name: Start nginx and postgres
+  shell: "docker-compose up --force-recreate --build -d nginx postgres"
+  args:
+    chdir: /var/www/html/

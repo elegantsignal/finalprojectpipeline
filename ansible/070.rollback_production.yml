@@ -1,0 +1,5 @@
+---
+- hosts: production
+  gather_facts: no
+  roles:
+    - app_rollback

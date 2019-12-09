@@ -1,0 +1,61 @@
+---
+version: "3.7"
+
+services:
+  blue:
+    image: "elegantsignal/m-sa2-10-19-app:${VERSION}"
+    container_name: upstream
+    volumes:
+      - ./files:/var/www/html/sites/default/files
+      - ./settings.php:/var/www/html/sites/default/settings.php
+    networks:
+      - m-sa2-10-19-network
+
+  green:
+    image: "elegantsignal/m-sa2-10-19-app:${VERSION}"
+    container_name: slave
+    volumes:
+      - ./files:/var/www/html/sites/default/files
+      - ./settings.php:/var/www/html/sites/default/settings.php
+    networks:
+      - m-sa2-10-19-network
+
+  nginx:
+    image: nginx:1.16
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./files:/var/www/html/sites/default/files
+    networks:
+      - m-sa2-10-19-network
+
+  postgres:
+    image: postgres:10-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: drupal
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+    volumes:
+      - m-sa2-10-19-database-volume:/var/lib/postgresql/data
+    networks:
+      - m-sa2-10-19-network
+
+volumes:
+  m-sa2-10-19-database-volume:
+
+networks:
+  m-sa2-10-19-network:
+    name: m-sa2-10-19-network
+
+# export VERSION=v8.7.6
+# docker container prune -f
+# docker-compose up --force-recreate --build -d nginx postgres 
+# docker-compose up --force-recreate --build blue
+# docker-compose up --force-recreate --build green
+# docker rename upstream tmp && docker rename slave upstream && docker rename tmp slave
+# docker container stop slave
+# docker-compose down

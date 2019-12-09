@@ -1,0 +1,16 @@
+---
+- name: Check if stable and latest version are the same
+  fail:
+    msg: Stable and latest versions should be the same
+  when: stable != latest
+
+- name: Start blue service
+  shell: "docker-compose up --force-recreate --build -d blue"
+  args:
+    chdir: /var/www/html/
+
+- name: Switch upstream from green to blue
+  shell: docker rename upstream tmp && docker rename slave upstream && docker rename tmp slave
+
+- name: Stop slave server
+  shell: docker-compose stop blue

@@ -1,0 +1,72 @@
+import groovy.json.JsonSlurper
+
+def ACTION
+def TAG
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'payload')
+        string(name: 'registryHub', defaultValue: 'elegantsignal/m-sa2-10-19-app')
+    }
+
+    stages {
+        stage("Parse payload") {
+            steps {
+                script {
+                    def slurper = new groovy.json.JsonSlurper()
+                    def payload = slurper.parseText(params.payload)
+                    echo payload.action
+                    ACTION = payload.action
+                    TAG = payload.release.tag_name
+                }
+            }
+        }
+
+
+        stage("Finish if webhook is not release") {
+            steps {
+                script {
+                    if (!ACTION.equalsIgnoreCase('released')) {
+                        echo "This is not release!"
+                        currentBuild.result = 'NOT_BUILT'
+                        error "0"
+                    } else {
+                        echo 'This is release!'
+                    }
+                }
+            }
+        }
+
+        stage("Checkout to tag") {
+            steps {
+                dir("release") {
+                    sh "git clone https://github.com/elegantsignal/m-sa2-10-19-app.git m-sa2-10-19-app || true"
+                    sh "git -C m-sa2-10-19-app checkout master"
+                    sh "git -C m-sa2-10-19-app pull"
+                    sh "git -C m-sa2-10-19-app checkout $TAG"
+                }
+            }
+        }
+
+        stage('Copy Dockerfile') {
+            steps {
+                sh "cp docker/Dockerfile release/m-sa2-10-19-app/Dockerfile"
+                sh "cp docker/.dockerignore release/m-sa2-10-19-app/.dockerignore"
+            }
+        }
+
+        stage("Build image and upload to Docker Hub") {
+            steps {
+                dir("release/m-sa2-10-19-app") {
+                    script {
+                        docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-elegantsignal') {
+                            def dockerImage = docker.build("$registryHub:$TAG")
+                            dockerImage.push()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

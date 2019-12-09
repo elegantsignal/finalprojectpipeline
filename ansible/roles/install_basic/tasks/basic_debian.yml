@@ -1,0 +1,16 @@
+---
+- name: Upadate repository chache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install frequent usage applications
+  apt:
+    name: git, htop, rsync, nano, mc
+    state: present
+
+- name: Set nano to default text editor
+  lineinfile:
+    path: ~/.bashrc
+    regexp: "^export EDITOR"
+    line: "export EDITOR=nano"

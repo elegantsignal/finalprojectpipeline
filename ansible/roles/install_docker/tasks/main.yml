@@ -1,0 +1,5 @@
+---
+- name: Install Docker on Debian based system
+  become: True
+  import_tasks: docker_debian.yml
+  when: ansible_os_family == "Debian"

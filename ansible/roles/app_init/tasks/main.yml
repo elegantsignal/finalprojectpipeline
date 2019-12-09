@@ -1,0 +1,15 @@
+---
+- name: Create website
+  shell: docker exec -it upstream /bin/bash -c '/var/www/vendor/bin/drush site-install demo_umami --yes --account-name=admin --account-pass=admin --site-name=Test --db-url=pgsql://docker:docker@postgres:5432/drupal || true'
+
+- name: Put site to maintenance mode
+  shell: docker exec -it upstream /bin/bash -c '/var/www/vendor/bin/drush sset system.maintenance_mode TRUE'
+
+- name: Clear cache
+  shell: docker exec -it upstream /bin/bash -c '/var/www/vendor/bin/drush cache-rebuild'
+
+- name: Dump database
+  shell: docker exec postgres /bin/bash -c 'PGPASSWORD=docker pg_dump -U docker drupal' > rollback.sql
+
+- name: Bring site up
+  shell: docker exec -it upstream /bin/bash -c '/var/www/vendor/bin/drush sset system.maintenance_mode FALSE'

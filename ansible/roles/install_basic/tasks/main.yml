@@ -1,0 +1,5 @@
+---
+- name: Install most frequent used applications and make basic setup
+  become: True
+  import_tasks: basic_debian.yml
+  when: ansible_os_family == "Debian"

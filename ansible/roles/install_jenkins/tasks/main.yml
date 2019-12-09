@@ -1,0 +1,61 @@
+- name: Add Jenkins user
+  user:
+    name: jenkins
+    shell: /bin/bash
+    groups: docker
+    append: yes
+    createhome: yes
+
+- name: Change docker.sock permission to allow run Docker containers from Jenkins Container
+  file:
+    path: /var/run/docker.sock
+    mode: 666
+
+- name: Create Jenkins datadir
+  file:
+    path: /home/jenkins/jenkins_home
+    state: directory
+    mode: "0755"
+    owner: "jenkins"
+    group: "jenkins"
+
+- name: create Dockerfile
+  copy:
+    src: files/Dockerfile
+    dest: /home/jenkins/Dockerfile
+    owner: jenkins
+    group: jenkins
+
+- name: create docker-compose.yml
+  copy:
+    src: files/docker-compose.yml
+    dest: /home/jenkins/docker-compose.yml
+    owner: jenkins
+    group: jenkins
+
+- name: create .dockerignore
+  copy:
+    src: files/.dockerignore
+    dest: /home/jenkins/.dockerignore
+    owner: jenkins
+    group: jenkins
+
+- name: Start Jenkins
+  block:
+    - name: Stop jenkins
+      docker_compose:
+        project_src: /home/jenkins
+        state: absent
+    - name: Start jenkins
+      docker_compose:
+        project_src: /home/jenkins
+        recreate: always
+        build: yes
+      register: output  
+    - name: Prune everything
+      docker_prune:
+        containers: yes
+        images: yes
+        networks: yes
+        volumes: yes
+        builder_cache: yes
