@@ -3,4 +3,5 @@
   roles:
     - install_basic
     - install_docker
+    - app_docker_compose
     - app_setup

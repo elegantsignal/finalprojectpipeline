@@ -1,35 +1,50 @@
 ---
-- name: Start green service
-  shell: "docker-compose up --force-recreate --build -d green"
+- name: Cleanup
+  shell: "docker container prune -f"
   args:
     chdir: /var/www/html/
 
+- name: Start green service
+  shell: "docker-compose up --build -d green"
+  args:
+    chdir: /var/www/html/
+
+- name: Return error if we are in prerelease phase
+  shell: "docker-compose ps | grep -c green"
+  args:
+    chdir: /var/www/html/
+  register: result
+  failed_when: result.stdout == "0"
+
 - name: Put site to maintenance mode
-  shell: docker-compose exec blue /bin/bash -c '/var/www/vendor/bin/drush sset system.maintenance_mode TRUE'
+  shell: docker exec upstream /bin/bash -c '/var/www/vendor/bin/drush sset system.maintenance_mode TRUE'
+  args:
+    chdir: /var/www/html/
 
 - name: Clear cache
-  shell: docker-compose exec blue /bin/bash -c '/var/www/vendor/bin/drush cache-rebuild'
+  shell: docker exec upstream /bin/bash -c '/var/www/vendor/bin/drush cache-rebuild'
+  args:
+    chdir: /var/www/html/
 
 - name: Dump database
   shell: docker exec postgres /bin/bash -c 'PGPASSWORD=docker pg_dump -U docker drupal' > /var/www/html/rollback-{{ stable }}.sql
+  args:
+    chdir: /var/www/html/
 
-- name: Switch upstream from blue to greean
-  shell: docker rename upstream tmp && docker rename slave upstream && docker rename tmp slave
+- name: Set green as upstream
+  shell: docker rename upstream blue && docker rename green upstream
 
-- name: Try to upgrade
-  block:
-    - name: Update database
-      shell: docker-compose exec green /bin/bash -c '/var/www/vendor/bin/drush updatedb'
+- name: Update database
+  shell: docker exec upstream /bin/bash -c '/var/www/vendor/bin/drush updatedb'
+  args:
+    chdir: /var/www/html/
 
-    - name: Bring server up (latest)
-      shell: docker-compose exec green /bin/bash -c '/var/www/vendor/bin/drush sset system.maintenance_mode FALSE'
+- name: Bring server up (latest)
+  shell: docker exec upstream /bin/bash -c '/var/www/vendor/bin/drush sset system.maintenance_mode FALSE'
+  args:
+    chdir: /var/www/html/
 
-    - name: Stop slave server
-      shell: docker-compose stop blue
-
-  rescue:
-    - name: PANIC!!! Switch upstream from greean to blue
-      shell: docker rename upstream tmp && docker rename slave upstream && docker rename tmp slave
-
-    - name: Bring server up (stable)
-      shell: docker-compose exec blue /bin/bash -c '/var/www/vendor/bin/drush sset system.maintenance_mode FALSE'
+- name: Start green service
+  shell: "docker-compose stop blue"
+  args:
+    chdir: /var/www/html/

@@ -1,0 +1,12 @@
+---
+- name: Create /var/www/html
+  file:
+    path: /var/www/html
+    state: directory
+
+- name: Create docker-compose
+  template:
+    src: templates/docker-compose.yml.j2
+    dest: /var/www/html/docker-compose.yml
+    owner: www-data
+    group: www-data

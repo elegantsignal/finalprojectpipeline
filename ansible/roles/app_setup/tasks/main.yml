@@ -1,9 +1,4 @@
 ---
-- name: Create /var/www/html
-  file:
-    path: /var/www/html
-    state: directory
-
 - name: Create /var/www/html/file
   file:
     path: /var/www/html/files
@@ -15,13 +10,6 @@
   file:
     path: /var/www/html/settings.php
     state: touch
-    owner: www-data
-    group: www-data
-
-- name: Create docker-compose
-  template:
-    src: templates/docker-compose.yml.j2
-    dest: /var/www/html/docker-compose.yml
     owner: www-data
     group: www-data
 

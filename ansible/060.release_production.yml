@@ -1,4 +1,5 @@
 ---
 - hosts: production
   roles:
+    - app_docker_compose
     - app_release

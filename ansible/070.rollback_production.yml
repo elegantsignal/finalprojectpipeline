@@ -2,4 +2,5 @@
 - hosts: production
   gather_facts: no
   roles:
+    - app_docker_compose
     - app_rollback

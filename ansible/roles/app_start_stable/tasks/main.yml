@@ -1,5 +1,4 @@
 ---
-
 - name: Prune containers
   shell: "docker container prune -f"
 
@@ -7,6 +6,9 @@
   shell: "docker-compose up --force-recreate --build -d blue"
   args:
     chdir: /var/www/html/
+
+- name: Set upstream to blue
+  shell: docker rename blue upstream
 
 - name: Stop green service
   shell: "docker-compose stop green"

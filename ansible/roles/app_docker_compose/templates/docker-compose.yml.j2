@@ -4,7 +4,7 @@ version: "3.7"
 services:
   blue:
     image: "elegantsignal/m-sa2-10-19-app:{{ stable }}"
-    container_name: upstream
+    container_name: blue
     volumes:
       - ./files:/var/www/html/sites/default/files
       - ./settings.php:/var/www/html/sites/default/settings.php
@@ -13,7 +13,7 @@ services:
 
   green:
     image: "elegantsignal/m-sa2-10-19-app:{{ latest }}"
-    container_name: slave
+    container_name: green
     volumes:
       - ./files:/var/www/html/sites/default/files
       - ./settings.php:/var/www/html/sites/default/settings.php

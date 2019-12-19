@@ -109,19 +109,41 @@ On GitHub release event for **AppProject** we trigger webhook which starts Jenki
 
 First of all we need to setup **stable** and **latest** version of application in `ansible/group_vars/all.yml`.
 
-1. `ansible/020.setup_production.yml` playbook will install everything we need on production server.
+1. Playbook will install everything we need on production server.
 
-1. `ansible/030.start_stable_production.yml` playbook configure and start **Nginx** and **Postgres**.
+   ```bash
+   ansible-playbook --vault-password-file pass 020.setup_production.yml
+   ```
 
-1. `ansible/035.init_production.yml` this playbook should be run only once. It create demo content for the project.
+1. Playbook configure and start **Nginx** and **Postgres**.
 
-1. `ansible/040.start_latest_production.yml` start **stable** version of application.
+   ```bash
+   ansible-playbook --vault-password-file pass 030.start_stable_production.yml
+   ```
 
-1. `ansible/050.prerelease_production.yml` start **latest** version of application.
+1. This playbook should be run only once. It create demo content for the project.
 
-1. `ansible/060.release_production.yml` if everything is okay with **latest** we can update stable version in `ansible/group_vars/all.yml` and run this playbook to fix changes.
+   ```bash
+   ansible-playbook --vault-password-file pass 035.init_production.yml
+   ```
 
-1. `ansible/070.rollback_production.yml` we should run this playbook to make rollback from **latest** to **stable** version.
+1. Start **latest** version of application.
+
+   ```bash
+   ansible-playbook --vault-password-file pass 050.prerelease_production.yml
+   ```
+
+1. If everything is okay with **latest** we can update stable version in `ansible/group_vars/all.yml` and run this playbook to fix changes.
+
+   ```bash
+   ansible-playbook --vault-password-file pass 060.release_production.yml
+   ```
+
+1. We should run this playbook to make rollback from **latest** to **stable** version.
+
+   ```bash
+   ansible-playbook --vault-password-file pass 070.rollback_production.yml
+   ```
 
 ### Update process
 
