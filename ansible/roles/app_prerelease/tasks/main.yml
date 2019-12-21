@@ -44,7 +44,7 @@
   args:
     chdir: /var/www/html/
 
-- name: Start green service
-  shell: "docker-compose stop blue"
-  args:
-    chdir: /var/www/html/
+# - name: Start green service
+#   shell: "docker-compose stop blue"
+#   args:
+#     chdir: /var/www/html/
